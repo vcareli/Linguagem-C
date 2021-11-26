@@ -2,45 +2,74 @@
 #include <stdlib.h>
 #include <string.h>
 #include <ctype.h>
+#include <time.h>
 #include "fonction.h"
 
 int main(int argc, char *argv[]){
+    int *bonne_lettre = NULL;
+    int qtd_mot_arq = 0, randomico = 0, linha = 0, nivel = 0;
+    long vies = 0, taille = 0;
+    char mot_secret[TAILLE_MOT] = "", letra = 0;
+    FILE* arquivo = NULL;
 
-    int size_mot = 0, *maLettre = NULL, coups = 5, duvida = 1, mot_affiche[30];
-    char mot_secret[] = "CORPAO";
+// Abre e escolhe uma palavra no arquivo de dados
+    arquivo = fopen("dicionario.pnd", "r");
+    if(arquivo != NULL){
+        do{
+            linha = fgetc(arquivo);
+            if(linha == '\n'){qtd_mot_arq++;}
+        }while(linha != EOF);
+        rewind(arquivo);    //Volta pro inicio do arquivo
 
-    printf("=== Bienvenue au Pendu ===\n");
-    size_mot = strlen(mot_secret);      //Conta tamanho da palavra secreta
-    maLettre = malloc(size_mot * sizeof(int));
-    strcpy(mot_affiche, mot_secret);    //copia conteudo da palavra secreta para palavra de tela
-
-    for(int i = 0; i < size_mot; i++){
-        mot_affiche[i] = '_';       //Substitui letra por underline
+//Escolhe a palavra aleatoriamente
+        srand(time(NULL));
+        randomico = rand() % qtd_mot_arq;
+        while(randomico > 0){
+            linha = fgetc(arquivo);
+            if(linha == '\n'){randomico--;}
+        }
+        fgets(mot_secret, TAILLE_MOT, arquivo);
+        fclose(arquivo);    //Fecha o afrquivo
+    }else{
+        printf("\nImpossivel iniciar jogo, arquivo DICIONARIO.PND não encontrado!");
+        exit(1);
     }
-    mot_affiche[size_mot] = '\0';
-     if(strcmp(mot_affiche, mot_secret) == 0){
-        affiche_mot(size_mot, mot_secret);
-        printf("\nTu as reussi... Felicitations !!!");
+
+// Tratamento da palavra secreta
+    taille = strlen(mot_secret)-1;
+    mot_secret[taille] = '\0';
+    bonne_lettre = malloc(taille * sizeof(int));
+
+    for(int j = 0; j < taille; j++){
+        bonne_lettre[j] = 0;
     }
 
-    while(coups > 0 || strcmp(mot_affiche, mot_secret) != 0){
-        printf("\nTu as %d coups", coups);
-        printf("\nMot Secret: ");
-        affiche_mot(size_mot, mot_affiche);     //Função para mostrar palavra escondida
-        printf("\nUne lettre: ");
-        maLettre = lirecaracter();             //Lê caracter excluindo ENTER
-        for(int i = 0; mot_secret[i] != '\0'; i++){
-            if(maLettre == mot_secret[i]){
-                mot_affiche[i] = maLettre;
-                duvida = 0;
+// Jogo em si
+    printf("\n* * * * P E N D U * * * *\n\n\nVoce tem %ld vidas...\n", vies);
+    printf("\nEscolha seu nivel:\n1 - Facil\n2 - Dificil: ");
+    scanf("%d", &nivel);
+    if(nivel == 1){vies = 6;}else{vies = 4;}
+    printf("\n\nVoce tem %d vidas...\n\n\n", vies);
+
+    while(vies > 0 && !gagner(bonne_lettre, taille)){
+        for(int i = 0; i < taille; i++){
+            if(bonne_lettre[i]){
+                printf("%c ", mot_secret[i]);
+            }else{
+                printf("_ ");
             }
         }
-        if(duvida == 1){coups--;}
+        printf("\n\nAdvinhe uma letra? \n");
+        letra = lirecaracter();
+        if(!recherche_lettre(letra, mot_secret, bonne_lettre)){
+            vies--;
+            printf("\nLetra errada.\nVoce tem %ld vidas...\n", vies);
+        }
     }
-    if(strcmp(mot_affiche, mot_secret) == 0){
-
-        affiche_mot(size_mot, mot_secret);
-        printf("Tu as reussi... Felicitations !!!");
+    if(gagner(bonne_lettre, taille)){
+         printf("Parabéns !!! Você acertou a palavra!");
+    }else{
+        printf("\n\nVocê perdeu... A palavra era %s.\n", mot_secret);
     }
-    return 0;
+    free(bonne_lettre);
 }
