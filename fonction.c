@@ -8,12 +8,9 @@
 */
 
 char lirecaracter(){
-/*
-    Função para ler um caracter digitado e desconsiderar a tecla ENTER
-*/
     char caracter = 0;
 
-    caracter = getchar();      //Lê o caracter digitado e coloca em maiusculo
+    caracter = getchar();
     caracter = toupper(caracter);
 
     while(getchar() != '\n');
@@ -21,9 +18,25 @@ char lirecaracter(){
     return caracter;
 }
 
-void affiche_mot(int tamanho, int palavra[]){
-    for(int i = 0; i < tamanho; i++){
-        printf("%c ", palavra[i]);
+int recherche_lettre(char lettre, char mot[], int tableau[]){
+    int i = 0, cherche = 0;
+
+    for(i = 0; mot[i] != '\0'; i++){
+        if(lettre == mot[i]){
+            tableau[i] = 1;
+            cherche = 1;
+        }
     }
+    return cherche;
 }
 
+int gagner(int tableau[], long longueur){
+    int resultat = 1;
+
+    for(int i = 0; i < longueur; i++){
+        if(tableau[i] == 0){
+            resultat = 0;
+        }
+    }
+    return resultat;
+}
